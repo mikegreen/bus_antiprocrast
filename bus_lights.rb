@@ -10,6 +10,7 @@ require 'require_all'
 # require 'date'
 require 'net/http'
 require_relative 'config/ba_config'
+require 'rpi_gpio'
 
 # t = DateTime.now
 
@@ -79,34 +80,6 @@ puts "array contents: #{ary}"
 xml.elements.each('RTT/AgencyList/Agency') do |e|
 
     e.elements.each('*/*/Agency/*') do |p|
-    # csv_file.puts output + [e.attributes['id'], e.textof("foo"), p.attributes['']].flatten.join("|") + "\n"
-    
-    # check if xml element is populated and put to variable if it is 
-    # todo: (probably a better way to do this)
 
-    reservation = []
-    reservation << check_empty_element(p, 'PropertyCode' )
-    reservation << check_empty_element(p, 'Title')
-    reservation << check_empty_element(p, 'FirstName')
-    reservation << check_empty_element(p, 'LastName')
-    reservation << check_empty_element(p, 'EmailAddress' )
-    reservation << check_empty_element(p, 'TelephoneNumber')
-    reservation << check_empty_element(p, 'City' )
-    reservation << check_empty_element(p, 'StateCode' )
-    reservation << check_empty_element(p, 'CountryCode' )
-    reservation << check_empty_element(p, 'ArrivalDate' )
-    reservation << check_empty_element(p, 'DepartureDate' )
-    reservation << check_empty_element(p, 'RoomNumber' )
-
-    # build a row of the csv
-    reservation_row = reservation.join(delimiter) + "\n"
-    # puts to screen for debug
-    puts reservation_row
-
-
-    # this shouldn't be necessary
-    #reservation_row = ""
-  end # ReservationGuestProfile do
-end # ArrayOfReservationGuestProfile do
-
-
+end
+end
