@@ -2,6 +2,10 @@
 # mike built this 2015-03-28
 
 require 'pi_piper'
+require './bus_light_api.rb'
+
+nextBusMinutes = getBusInfo
+puts "next bus minutes: #{nextBusMinutes}"
 
 test_led_pin = 4
 
@@ -30,7 +34,7 @@ clear_register
 
 puts "flash to say I'm alive"
 4.times do
-	puts "turn on LED"
+#	puts "turn on LED"
 	test_led.on
 	sleep(sleep_time)
 	test_led.off
@@ -44,17 +48,10 @@ def shift_bit
 	@clock.off
 end
 
-shift_bit
-latch_go
-sleep(sleep_time)
-shift_bit
-latch_go
-sleep(sleep_time)
-shift_bit
-latch_go
-sleep(sleep_time)
-shift_bit
-latch_go
+nextBusMinutes.to_i.times do
+	shift_bit
+	latch_go
+end
 
 sleep(1)
 

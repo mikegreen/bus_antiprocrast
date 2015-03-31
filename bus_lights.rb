@@ -19,6 +19,12 @@ puts apiToken
 apiStopCode = '16104'
 routeToShow = '43-Masonic'
 
+def testmethod
+	puts "foo"
+end
+
+testmethod
+
 # def log_stathat(stathat_path)
 #  StatHat::API.ez_post_count("#{RoomkeyConfig.stathat_prefix}.#{stathat_path}", RoomkeyConfig.stathat_key, 1)
 # end
