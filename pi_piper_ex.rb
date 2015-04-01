@@ -4,14 +4,8 @@
 require 'pi_piper'
 require './bus_light_api.rb'
 
-nextBusMinutes = getBusInfo
-puts "next bus minutes: #{nextBusMinutes}"
-
-test_led_pin = 4
-
-sleep_time = 1.0/5.0
-
 puts "setup pins for pipiper"
+test_led_pin = 4
 @mr_pin = PiPiper::Pin.new(pin: 18, direction: :out)
 test_led = PiPiper::Pin.new(pin: test_led_pin, direction: :out)
 @clock = PiPiper::Pin.new(pin: 23, direction: :out)
@@ -32,6 +26,11 @@ end
 
 clear_register
 
+@nextBusMinutes = getBusInfo
+puts "next bus minutes: #{@nextBusMinutes}"
+
+sleep_time = 1.0/5.0
+
 puts "flash to say I'm alive"
 4.times do
 #	puts "turn on LED"
@@ -48,14 +47,54 @@ def shift_bit
 	@clock.off
 end
 
-nextBusMinutes.to_i.times do
-	shift_bit
-	latch_go
+def updateLights(minutes,lightDelay)
+	clear_register
+	minutes.to_i.times do
+		shift_bit
+		latch_go
+		if lightDelay != 0 
+			sleep(1.0/lightDelay)
+		else
+		end
+	end
 end
 
-sleep(1)
+updateLights(@nextBusMinutes,4.0)
 
-clear_register
+def checkForNew
+	@nextBusMinutesOld = @nextBusMinutes 
+	while 1 == 1  do
+		if @nextBusMinutesOld.to_i > 10
+			sleep(45)
+		elsif @nextBusMinutesOld.to_i > 7
+			sleep(15)
+		elsif @nextBusMinutesOld.to_i > 5
+			sleep(10)
+		elsif @nextBusMinutesOld.to_i > 3
+			sleep(5)
+		else
+			sleep(1)
+		end
+		@nextBusMinutesNew = getBusInfo
+		if @nextBusMinutesNew != @nextBusMinutesOld
+			puts "update lights with delay..."
+			updateLights(@nextBusMinutesNew,2.0)
+			@nextBusMinutesOld = @nextBusMinutesNew
+			puts "old #{@nextBusMinutesOld} new #{@nextBusMinutesNew}"
+		else
+			puts "old = new"
+		end
+		puts "new: #{@nextBusMinutesNew}"		
+	end 
+end
+
+checkForNew
+
+#updateLights(@nextBusMinutes,4.0)
+#nextBusMinutes = getBusInfo
+#puts "next bus minutes: #{@nextBusMinutes}"
+#updateLights(@nextBusMinutes,0)
+#@nextBusMinutesNew = getBusInfo
 
 puts "done test"
 
