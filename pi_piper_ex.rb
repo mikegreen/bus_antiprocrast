@@ -3,6 +3,7 @@
 
 require 'pi_piper'
 require './bus_light_api.rb'
+require 'date'
 
 puts "setup pins for pipiper"
 test_led_pin = 4
@@ -65,13 +66,13 @@ def checkForNew
 	@nextBusMinutesOld = @nextBusMinutes 
 	while 1 == 1  do
 		if @nextBusMinutesOld.to_i > 10
-			sleep(45)
+			sleep(1)
 		elsif @nextBusMinutesOld.to_i > 7
-			sleep(15)
+			sleep(1)
 		elsif @nextBusMinutesOld.to_i > 5
-			sleep(10)
+			sleep(1)
 		elsif @nextBusMinutesOld.to_i > 3
-			sleep(5)
+			sleep(1)
 		else
 			sleep(1)
 		end
@@ -84,7 +85,9 @@ def checkForNew
 		else
 			puts "old = new"
 		end
-		puts "new: #{@nextBusMinutesNew}"		
+		time = Time.now.to_s
+		time = DateTime.parse(time).strftime("%d/%m/%Y %H:%M") 
+		puts "new: #{@nextBusMinutesNew} time: #{time}"		
 	end 
 end
 

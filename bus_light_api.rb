@@ -19,19 +19,19 @@ api_call_url = "http://services.my511.org/Transit2.0/GetNextDeparturesByStopCode
 #puts "          URL: #{api_call_url}"
 
 begin
-  xml_data = RestClient::Request.execute(:url => api_call_url, :ssl_version => 'TLSv1', :method => 'get')
+tries ||= 3
+	xml_data = RestClient::Request.execute(:url => api_call_url, :ssl_version => 'TLSv1', :method => 'get')
 rescue => e
-  puts xml_data.code
-  puts "Somethign went wrong, return: #{e.response}"
-  puts "goodbye"
-  exit
+	puts "something went wrong with RestClient request"
+ 	puts "goodbye"
+ 	retry unless (tries -= 1).zero?
 else
 #  puts "API call successful, returned code: #{xml_data.code}"
 end
 
 xml = REXML::Document.new(xml_data)
 
-result_size = xml.root.elements.size
+# result_size = xml.root.elements.size
 # puts "                     Rows returned: #{result_size}"
 
 # puts xml.elements.each("RTT/AgencyList/Agency/RouteList/Route/") { |element| puts element.attributes["name"] }
@@ -39,9 +39,10 @@ result_size = xml.root.elements.size
 puts "    route: #{xml.elements["RTT/AgencyList/Agency/RouteList/Route[@Name='#{routeToShow}']"].attributes["Name"]}" \
 	", #{xml.elements["RTT/AgencyList/Agency/RouteList/Route[@Name='#{routeToShow}']/RouteDirectionList/RouteDirection/"].attributes["Code"]}" \
 	" @ #{xml.elements["RTT/AgencyList/Agency/RouteList/Route[@Name='#{routeToShow}']/RouteDirectionList/RouteDirection/StopList/Stop/"].attributes["name"]}"
-puts " next bus: #{xml.elements["RTT/AgencyList/Agency/RouteList/Route[@Name='#{routeToShow}']/RouteDirectionList/RouteDirection/StopList/Stop/DepartureTimeList/DepartureTime"].get_text.value} minutes"
-nextBusMinutes = xml.elements["RTT/AgencyList/Agency/RouteList/Route[@Name='#{routeToShow}']/RouteDirectionList/RouteDirection/StopList/Stop/DepartureTimeList/DepartureTime"].get_text.value
-
-# RouteDirectionList/RouteDirection/StopList/Stop/DepartureTimeList
+#	puts " next bus: #{nextBusMinutes} minutes"
+	nextBusMinutes = xml.elements["RTT/AgencyList/Agency/RouteList/Route[@Name='#{routeToShow}']/RouteDirectionList/RouteDirection/StopList/Stop/DepartureTimeList/DepartureTime"].get_text.value
 
 end #GetBusInfo class
+
+# only for testing, as this is called by other rb
+# getBusInfo
