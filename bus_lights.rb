@@ -4,88 +4,80 @@
 
 require 'rest_client'
 require 'rexml/document'
-# require 'stathat'
 require 'require_all'
-# require 'net/ftp'
-# require 'date'
 require 'net/http'
 require_relative 'config/ba_config'
 require 'rpi_gpio'
 
-# t = DateTime.now
-
+# Retrieve the API token from the configuration file
 apiToken = BaConfig.apiToken
 puts apiToken
+
+# Define the stop code and route to be queried
 apiStopCode = '16104'
 routeToShow = '43-Masonic'
 
+# Simple method to test basic functionality
 def testmethod
-	puts "foo"
+  puts "foo"
 end
 
 testmethod
 
-# def log_stathat(stathat_path)
-#  StatHat::API.ez_post_count("#{RoomkeyConfig.stathat_prefix}.#{stathat_path}", RoomkeyConfig.stathat_key, 1)
-# end
-
-# log_stathat('startup')
-
+# Construct the API call URL using the token and stop code
 api_call_url = "http://services.my511.org/Transit2.0/GetNextDeparturesByStopCode.aspx?token=#{apiToken}&stopCode=#{apiStopCode}"
 
 puts "      API key: #{apiToken}"
 puts "    Stop Code: #{apiStopCode}"
 puts "          URL: #{api_call_url}"
 
+# Execute the API call and handle exceptions
 begin
   xml_data = RestClient::Request.execute(:url => api_call_url, :ssl_version => 'TLSv1', :method => 'get')
 rescue => e
-  # this doesnt work for some reason - returns blank, test with a date range of 10 days or so, which seems to timeout the RK api (bad)
-  puts xml_data.code
-  puts "Somethign went wrong, return: #{e.response}"
+  puts "Something went wrong, return: #{e.response}"
   puts "goodbye"
   exit
 else
   puts "API call successful, returned code: #{xml_data.code}"
 end
 
+# Parse the XML data returned from the API
 xml = REXML::Document.new(xml_data)
 
+# Get the size of the result to check how many elements are returned
 result_size = xml.root.elements.size
 puts "                     Rows returned: #{result_size}"
 
-delimiter = "|"
-
+# Placeholder for CSV header (not used in current script)
 csv_header = "nothing here yet"
 
-
-# check if XML value is empty (often some are) and set to blank if so so we don't fail when building the csv
+# Helper function to check if an XML element is empty and return a blank string if true
 def check_empty_element(p, name)
   p.elements[name].text || ""
-end # def check_empty_element 
+end
 
-# puts xml.elements.each("RTT/AgencyList/Agency/RouteList/Route/") { |element| puts element.attributes["name"] }
-
+# Output route, direction, stop, and next bus information from the XML
 puts "    route: #{xml.elements["RTT/AgencyList/Agency/RouteList/Route[@Name='43-Masonic']"].attributes["Name"]}"
 puts "direction: #{xml.elements["RTT/AgencyList/Agency/RouteList/Route[@Name='43-Masonic']/RouteDirectionList/RouteDirection/"].attributes["Code"]}"
 puts "     stop: #{xml.elements["RTT/AgencyList/Agency/RouteList/Route[@Name='43-Masonic']/RouteDirectionList/RouteDirection/StopList/Stop/"].attributes["name"]}"
 puts " next bus: #{xml.elements["RTT/AgencyList/Agency/RouteList/Route[@Name='43-Masonic']/RouteDirectionList/RouteDirection/StopList/Stop/DepartureTimeList/DepartureTime"].get_text.value} minutes"
 
-# RouteDirectionList/RouteDirection/StopList/Stop/DepartureTimeList
+# Initialize an array to store all coming bus times
+ary = Array.new
 
-ary = Array.new    #=> []
-
+# Iterate through each departure time and push to the array
 puts 'interate thru all coming buses and push to array'
 xml.elements.each("RTT/AgencyList/Agency/RouteList/Route[@Name='43-Masonic']/RouteDirectionList/RouteDirection/StopList/Stop/DepartureTimeList/DepartureTime") do |element| 
-  # puts element.get_text.value.to_s
-  ary.push (element.get_text.value.to_s)
+  ary.push(element.get_text.value.to_s)
 end
 
+# Output the contents of the array containing bus times
 puts "array contents: #{ary}"
 
+# Additional XML parsing logic (not utilized in current script)
 xml.elements.each('RTT/AgencyList/Agency') do |e|
-
-    e.elements.each('*/*/Agency/*') do |p|
-
-end
+  e.elements.each('*/*/Agency/*') do |p|
+    # Additional parsing could be implemented here
+  end
 end

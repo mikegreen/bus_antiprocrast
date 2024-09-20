@@ -5,44 +5,42 @@ require 'rest_client'
 require 'rexml/document'
 require_relative 'config/ba_config'
 
+# This method fetches bus information using the 511.org API.
 def getBusInfo
+  # Retrieve the API token from the configuration module
+  apiToken = BaConfig.apiToken
+  
+  # Hardcoded stop code and route to show
+  apiStopCode = '16104'
+  routeToShow = '43-Masonic'
 
-apiToken = BaConfig.apiToken
-# puts apiToken
-apiStopCode = '16104'
-routeToShow = '43-Masonic'
+  # Construct the API URL with the token and stop code
+  api_call_url = "http://services.my511.org/Transit2.0/GetNextDeparturesByStopCode.aspx?token=#{apiToken}&stopCode=#{apiStopCode}"
 
-api_call_url = "http://services.my511.org/Transit2.0/GetNextDeparturesByStopCode.aspx?token=#{apiToken}&stopCode=#{apiStopCode}"
+  # Initialize retry count for API request
+  tries ||= 3
 
-#puts "      API key: #{apiToken}"
-#puts "    Stop Code: #{apiStopCode}"
-#puts "          URL: #{api_call_url}"
+  begin
+    # Execute the HTTP GET request to the API
+    xml_data = RestClient::Request.execute(:url => api_call_url, :ssl_version => 'TLSv1', :method => 'get')
+  rescue => e
+    # Print error message and retry up to 3 times if there's an issue with the request
+    puts "something went wrong with RestClient request"
+    puts "goodbye"
+    retry unless (tries -= 1).zero?
+  end
 
-begin
-tries ||= 3
-	xml_data = RestClient::Request.execute(:url => api_call_url, :ssl_version => 'TLSv1', :method => 'get')
-rescue => e
-	puts "something went wrong with RestClient request"
- 	puts "goodbye"
- 	retry unless (tries -= 1).zero?
-else
-#  puts "API call successful, returned code: #{xml_data.code}"
+  # Parse the XML response from the API
+  xml = REXML::Document.new(xml_data)
+
+  # Extract and print route, direction code, and stop name from the XML
+  puts "    route: #{xml.elements["RTT/AgencyList/Agency/RouteList/Route[@Name='#{routeToShow}']"].attributes["Name"]}" \
+    ", #{xml.elements["RTT/AgencyList/Agency/RouteList/Route[@Name='#{routeToShow}']/RouteDirectionList/RouteDirection/"].attributes["Code"]}" \
+    " @ #{xml.elements["RTT/AgencyList/Agency/RouteList/Route[@Name='#{routeToShow}']/RouteDirectionList/RouteDirection/StopList/Stop/"].attributes["name"]}"
+
+  # Extract the next bus departure time
+  nextBusMinutes = xml.elements["RTT/AgencyList/Agency/RouteList/Route[@Name='#{routeToShow}']/RouteDirectionList/RouteDirection/StopList/Stop/DepartureTimeList/DepartureTime"].get_text.value
 end
 
-xml = REXML::Document.new(xml_data)
-
-# result_size = xml.root.elements.size
-# puts "                     Rows returned: #{result_size}"
-
-# puts xml.elements.each("RTT/AgencyList/Agency/RouteList/Route/") { |element| puts element.attributes["name"] }
-
-puts "    route: #{xml.elements["RTT/AgencyList/Agency/RouteList/Route[@Name='#{routeToShow}']"].attributes["Name"]}" \
-	", #{xml.elements["RTT/AgencyList/Agency/RouteList/Route[@Name='#{routeToShow}']/RouteDirectionList/RouteDirection/"].attributes["Code"]}" \
-	" @ #{xml.elements["RTT/AgencyList/Agency/RouteList/Route[@Name='#{routeToShow}']/RouteDirectionList/RouteDirection/StopList/Stop/"].attributes["name"]}"
-#	puts " next bus: #{nextBusMinutes} minutes"
-	nextBusMinutes = xml.elements["RTT/AgencyList/Agency/RouteList/Route[@Name='#{routeToShow}']/RouteDirectionList/RouteDirection/StopList/Stop/DepartureTimeList/DepartureTime"].get_text.value
-
-end #GetBusInfo class
-
-# only for testing, as this is called by other rb
+# This method is only for testing purposes and is not called in production
 # getBusInfo
